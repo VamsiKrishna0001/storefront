@@ -11,18 +11,16 @@ from .serializers import ProductSerializer, CollectionSerializer
 
 # Create your views here.
 
-class ProductList(APIView):
-    def get(self, request):
-        queryset = Product.objects.select_related('collection').all()
-        serializer = ProductSerializer(
-            queryset, many=True, context={'request': request})
-        return Response(serializer.data)
-    
-    def post(seff, request):
-        serializer = ProductSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+class ProductList(ListCreateAPIView):
+    queryset = Product.objects.select_related('collection').all()
+    serializer_class = ProductSerializer
+
+    def get_serializer_context(self):
+        return {'request': self.request}
+
+class CollectionList(ListCreateAPIView):
+   queryset = Collection.objects.annotate(products_count=Count('products')).all()
+   serializer_class = CollectionSerializer
 
         
 class ProductDetails(APIView):
@@ -56,6 +54,7 @@ def collection_list(request):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
